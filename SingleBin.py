@@ -13,6 +13,7 @@ from astropy.io import fits
 import numpy as np
 
 from matplotlib.pyplot import figure, show
+import matplotlib.colors
 
 # %% load Azimuth, Elevation for DASC to determine pixel index of magnetic zenith
 """
@@ -47,6 +48,9 @@ Date        Declination Inclination Horizontal 	 North Comp	East Comp  Vertical 
 inclination = 77.4757
 declination = 18.6471
 
+mag_zenith_azimuth = 180 + declination
+mag_zenith_elevation = inclination
+
 # hardcoded filenames for simplicity
 time = datetime(2015, 10, 7, 6, 19, 13, 20000)
 millisec = int(time.microsecond / 1e3)
@@ -66,26 +70,13 @@ with fits.open(azimuth_file) as f:
 # convert counter-clockwise to clockwise azimuth
 azimuth = 360 - np.ma.masked_where(azimuth == 0, azimuth)
 
-fg = figure()
-axs = fg.subplots(1, 2, sharex=True, sharey=True)
-ax = axs[0]
-h = ax.pcolormesh(azimuth)
-ax.set_title("Azimuth (degrees clockwise from north)")
-ax.set_xlabel("x (pixels)")
-ax.set_ylabel("y (pixels)")
-fg.colorbar(h, ax=ax)
-
 with fits.open(elevation_file) as f:
     elevation = f[0].data
 elevation = np.ma.masked_where(elevation == 0, elevation)
 
-ax = axs[1]
-h = ax.pcolormesh(elevation)
-ax.set_title("Elevation (degrees from horizon)")
-fg.colorbar(h, ax=ax)
-
 with fits.open(image_file) as f:
     image_header = f[0].header
+    image = f[0].data
 
 image_glat = image_header["GLAT"]
 image_glon = image_header["GLON"]
@@ -97,6 +88,20 @@ print("image_glat (-90..90), image_glon [-180..180) East", image_glat, image_glo
 minimum hypotenuse of azimuth elevation as closest index
 """
 
-err = np.hypot(azimuth - declination, elevation - inclination)
+err = np.hypot(azimuth - mag_zenith_azimuth, elevation - mag_zenith_elevation)
+irow, icol = np.unravel_index(np.argmin(err), err.shape)
+
+"""
+Reference figure 3 from https://agupubs.onlinelibrary.wiley.com/doi/10.1002/2017GL073570
+"""
+fg = figure()
+ax = fg.gca()
+
+ax.pcolormesh(image, cmap="Greens", norm=matplotlib.colors.LogNorm())
+
+ax.contour(range(image.shape[0]), range(image.shape[1]), azimuth, levels=range(0, 360, 30))
+
+ax.scatter(icol, irow, marker="x", color="red")
+ax.set_title(image_name)
 
 show()
