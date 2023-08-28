@@ -2,9 +2,15 @@
 
 Looking at GNSS vis all sky data and the [GLOW](https://github.com/space-physics/NCAR-GLOW) model, using Python.
 
+## Verify image orientation
+
 First we have to load the data and verify the orientation.
 If the data isn't registered to physical coordinates properly, all the analysis is meaningless.
-I plan to use the moon as a reference, since it is a bright, well-known object that gets through DASC narrow-band filters.
+I plan to use the moon as a reference with Stellarium, since it is a bright, well-known object that gets through DASC narrow-band filters.
+
+## GlOW estimated precipitating electron flux via scipy.optimize.minimize
+
+The [GLOW Python interface](https://github.com/space-physics/NCAR-GLOW) allows running GLOW from Python and has Example scripts.
 
 First approach to check feasibility:
 use
