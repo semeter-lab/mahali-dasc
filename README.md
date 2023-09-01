@@ -2,6 +2,22 @@
 
 Looking at GNSS vis all sky data and the [GLOW](https://github.com/space-physics/NCAR-GLOW) model, using Python.
 
+## Setting up computer
+
+If using macOS we need [Homebrew](https://brew.sh) and a compiler.
+Then install
+
+```sh
+brew install git cmake gcc
+```
+
+You can get Python as well
+
+```sh
+brew install miniconda
+```
+
+
 ## Verify image orientation
 
 First we have to load the data and verify the orientation.
@@ -11,6 +27,10 @@ I plan to use the moon as a reference with Stellarium, since it is a bright, wel
 ## GlOW estimated precipitating electron flux via scipy.optimize.minimize
 
 The [GLOW Python interface](https://github.com/space-physics/NCAR-GLOW) allows running GLOW from Python and has Example scripts.
+Currently the GLOW altitude grid is
+[set in command-line program interface glowpython.f90](https://github.com/space-physics/ncar-glow/tree/main/src/ncarglow/fortran/glowpython.f90)
+by function
+[alt_grid in utils.f90](https://github.com/space-physics/NCAR-GLOW/blob/main/src/ncarglow/fortran/utils.f90)
 
 First approach to check feasibility:
 use
