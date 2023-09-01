@@ -5,11 +5,12 @@ As a next step, we would create bin along the ground distance. But I think it's 
 to show the fundamental algorithm first and then add geographic and altitude grid.
 """
 
+import mahali_dasc.dasc as dasc
+
 import argparse
 from pathlib import Path
 from datetime import datetime
 
-from astropy.io import fits
 import numpy as np
 
 from matplotlib.pyplot import figure, show
@@ -20,9 +21,11 @@ import matplotlib.colors
 We're starting by using only a single pixel brightness from DASC.
 """
 
+R = Path(__file__).parent / "data"
+
 p = argparse.ArgumentParser()
 p.add_argument(
-    "data_dir", help="directory where TEC and image data are", default=".", nargs="?"
+    "data_dir", help="directory where TEC and image data are", default=R, nargs="?"
 )
 P = p.parse_args()
 
@@ -64,19 +67,9 @@ azimuth_file = data_dir / azimuth_name
 elevation_file = data_dir / elevation_name
 image_file = data_dir / image_name
 
+azimuth, elevation = dasc.cal(azimuth_file, elevation_file)
 
-with fits.open(azimuth_file) as f:
-    azimuth = f[0].data
-# convert counter-clockwise to clockwise azimuth
-azimuth = 360 - np.ma.masked_where(azimuth == 0, azimuth)
-
-with fits.open(elevation_file) as f:
-    elevation = f[0].data
-elevation = np.ma.masked_where(elevation == 0, elevation)
-
-with fits.open(image_file) as f:
-    image_header = f[0].header
-    image = f[0].data
+image, image_header = dasc.image(image_file)
 
 image_glat = image_header["GLAT"]
 image_glon = image_header["GLON"]
@@ -99,7 +92,9 @@ ax = fg.gca()
 
 ax.pcolormesh(image, cmap="Greens", norm=matplotlib.colors.LogNorm())
 
-ax.contour(range(image.shape[0]), range(image.shape[1]), azimuth, levels=range(0, 360, 30))
+ax.contour(
+    range(image.shape[0]), range(image.shape[1]), azimuth, levels=range(0, 360, 30)
+)
 
 ax.scatter(icol, irow, marker="x", color="red")
 ax.set_title(image_name)

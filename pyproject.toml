@@ -2,6 +2,10 @@
 requires = ["setuptools>=61.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
+[package]
+name = "mahali_dasc"
+depedencies = ["astropy", "scipy", "numpy", "matplotlib"]
+
 [tool.black]
 line-length = 90
 
