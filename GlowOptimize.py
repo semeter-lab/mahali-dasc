@@ -4,15 +4,19 @@ Use GLOW with scipy.optimize.minimize to fit DASC brightness with GLOW
 model vis input precipitation parameters (here, a Maxwellian distribution).
 
 When this works, one would then add GNSS TEC data to the fit.
+
+General idea based of off https://github.com/space-physics/histfeas
 """
 
 # https://github.com/space-physics/ncarglow
-import ncarglow
 import mahali_dasc.dasc as dasc
 
 import argparse
 from pathlib import Path
 from datetime import datetime
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 R = Path(__file__).parent / "data"
 
@@ -23,6 +27,9 @@ p.add_argument(
 P = p.parse_args()
 
 data_dir = Path(P.data_dir)
+
+Nenergy = 250
+# number of Energy bins
 
 # %% load a DASC image
 # hardcoded filenames for simplicity
@@ -43,3 +50,13 @@ y_arbitrary = 100
 neighborhood = 5
 
 image, image_header = dasc.image(image_file)
+glat = image_header["GLAT"]
+glon = image_header["GLON"]
+
+brightness_observed = image[
+    x_arbitrary - neighborhood : x_arbitrary + neighborhood,
+    y_arbitrary - neighborhood : y_arbitrary + neighborhood,
+].mean()
+
+
+# %%
