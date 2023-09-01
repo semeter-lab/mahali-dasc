@@ -11,18 +11,17 @@ import typing
 
 import numpy as np
 import scipy.optimize as sciopt
-import numpy.linalg as linalg
+# import numpy.linalg as linalg
 
 
 def optfun(
-    E0: float,
-    Q: float,
+    Phi0,
     brightness_observed: float,
     time: datetime,
     glat: float,
     glon: float,
     Nenergy: int,
-    optical_wavelength_nm: str,
+    optical_wavelength_AA: str,
 ):
     """
     provides the quantity to minimize based on scipy.optimize
@@ -36,16 +35,22 @@ def optfun(
 
     """
 
+    E0 = Phi0[0]
+    Q = Phi0[1]
+
     iono = ncarglow.maxwellian(time, glat, glon, Q, E0, Nenergy)
 
     """
     the .sum() assumes looking straight up the field line--generally we'd
     have to account for oblique viewing angle
     """
-    brightness_model = iono["ver"].loc[:, optical_wavelength_nm].sum()
+    brightness_model = iono["ver"].loc[:, optical_wavelength_AA].sum()
 
     # this is the "2-norm" https://en.wikipedia.org/wiki/Norm_(mathematics)#p-norm
-    return linalg.norm(brightness_model - brightness_observed, ord=2)
+    # return linalg.norm(brightness_model - brightness_observed, ord=2)
+
+    # special case for scalar
+    return np.absolute(brightness_model - brightness_observed)
 
 
 def difffun(jfit, nEnergy=33, sx=109):
@@ -57,29 +62,29 @@ def difffun(jfit, nEnergy=33, sx=109):
 def fit_brightness(
     method: str,
     max_iter: int,
-    E0: float,
-    Q: float,
+    Phi0,
     brightness_observed: float,
     time_model: datetime,
     glat: float,
     glon: float,
     Nenergy: int,
-    optical_wavelength_nm: str,
+    optical_wavelength_AA: str,
 ):
     """
     method: str
         scipy.optimize.minimize method
     max_iter: int
         maximum number of iteration (might run forever if it's not converging fast enough)
-    Phi0: float
-        first guess for precipi
+    Phi0: vector of model input parameter
+        Initially, this is length-2 vector (E0, Q)
     https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html
     """
 
     constraints: dict[str, typing.Any] = {}
 
-    bounds = (0, np.inf)
-    # non-negativity
+    bounds = sciopt.Bounds(0, np.inf)
+    # lower bound: non-negativity
+    # upper bound: no limit
 
     opts: dict[str, typing.Any] = {"maxiter": max_iter}
     match method:
@@ -88,13 +93,13 @@ def fit_brightness(
             # 100
         case "bfgs":
             opts["norm"] = 2
+            bounds = None
             # 20
         case "tnc":
             pass
             # 20
         case "l-bfgs-b":
             pass
-            # defaults: maxfun=5*nEnergy*sx, maxiter=10
             # 100 maxiter works well
         case "slsqp":
             pass
@@ -110,8 +115,15 @@ def fit_brightness(
 
     Phifit = sciopt.minimize(
         optfun,
-        x0=(E0, Q),
-        args=(brightness_observed, time_model, glat, glon),
+        x0=Phi0,
+        args=(
+            brightness_observed,
+            time_model,
+            glat,
+            glon,
+            Nenergy,
+            optical_wavelength_AA,
+        ),
         method=method,
         bounds=bounds,  # non-negativity
         constraints=constraints,
