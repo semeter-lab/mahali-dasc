@@ -78,7 +78,7 @@ brightness_observed = image[
 
 # Initial guess
 E0 = 100  # eV
-Q = 0  # total electron flux
+Q = 1  # total electron flux
 
 # scipy.optimize needs a vector of parameters to optimize
 Phi0 = np.array([E0, Q])

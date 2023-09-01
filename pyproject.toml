@@ -5,6 +5,7 @@ build-backend = "setuptools.build_meta"
 [package]
 name = "mahali_dasc"
 depedencies = ["astropy", "scipy", "numpy", "matplotlib"]
+requires-python = ">=3.10"
 
 [tool.black]
 line-length = 90

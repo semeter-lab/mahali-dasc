@@ -11,6 +11,7 @@ import typing
 
 import numpy as np
 import scipy.optimize as sciopt
+
 # import numpy.linalg as linalg
 
 
@@ -47,10 +48,16 @@ def optfun(
     brightness_model = iono["ver"].loc[:, optical_wavelength_AA].sum()
 
     # this is the "2-norm" https://en.wikipedia.org/wiki/Norm_(mathematics)#p-norm
-    # return linalg.norm(brightness_model - brightness_observed, ord=2)
+    # err_norm linalg.norm(brightness_model - brightness_observed, ord=2)
 
     # special case for scalar
-    return np.absolute(brightness_model - brightness_observed)
+    err_norm = np.absolute(brightness_model - brightness_observed)
+
+    logging.info(
+        f"Guess for E0: {E0:f}  Q: {Q:f}  brightness: {brightness_model:.1e} residual: {err_norm:.1e}"
+    )
+
+    return err_norm
 
 
 def difffun(jfit, nEnergy=33, sx=109):
@@ -99,7 +106,9 @@ def fit_brightness(
             pass
             # 20
         case "l-bfgs-b":
-            pass
+            # https://docs.scipy.org/doc/scipy/reference/optimize.minimize-lbfgsb.html#optimize-minimize-lbfgsb
+            opts = opts
+            # opts |= {"maxcor": 10, "ftol": 1e-10, "gtol": 1e-10}
             # 100 maxiter works well
         case "slsqp":
             pass
