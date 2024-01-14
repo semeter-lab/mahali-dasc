@@ -45,7 +45,7 @@ def optfun(
     the .sum() assumes looking straight up the field line--generally we'd
     have to account for oblique viewing angle
     """
-    brightness_model = iono["ver"].loc[:, optical_wavelength_AA].sum()
+    brightness_model = iono["vertical_column_brightness"].loc[:, optical_wavelength_AA]
 
     # this is the "2-norm" https://en.wikipedia.org/wiki/Norm_(mathematics)#p-norm
     # err_norm linalg.norm(brightness_model - brightness_observed, ord=2)
@@ -54,7 +54,8 @@ def optfun(
     err_norm = np.absolute(brightness_model - brightness_observed)
 
     logging.info(
-        f"Guess for E0: {E0:f}  Q: {Q:f}  brightness: {brightness_model:.1e} residual: {err_norm:.1e}"
+        f"Guess for E0: {E0:f}  Q: {Q:f} "
+        f"brightness: {brightness_model:.1e} residual: {err_norm:.1e}"
     )
 
     return err_norm
